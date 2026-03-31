@@ -1,0 +1,31 @@
+/Users/hugocano/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+🚀 Iniciando Test de Integración End-to-End...
+✅ Misión 'test-mission-zaz-roma' creada localmente.
+⏳ Ejecutando flujo de agentes (este proceso puede tardar hasta 60s)...
+Orchestration error: 5 validation errors for DayPlan
+summary
+  Field required [type=missing, input_value={'day_number': 1, 'date':...d for public transport'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+activities.0.type
+  Input should be 'cultural', 'nature', 'food', 'adventure', 'relax' or 'shopping' [type=literal_error, input_value='Landmark', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.12/v/literal_error
+activities.0.source
+  Field required [type=missing, input_value={'time': '10:00', 'name':...8f2cff7bf590036a6eaf5d'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+activities.1.type
+  Input should be 'cultural', 'nature', 'food', 'adventure', 'relax' or 'shopping' [type=literal_error, input_value='Square', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.12/v/literal_error
+activities.1.source
+  Field required [type=missing, input_value={'time': '14:00', 'name':...070222b745bd5fabec1664'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+
+--- RESULTADOS DEL TEST ---
+Estado Final: error
+Vuelos encontrados: 0
+Hoteles encontrados: 0
+Días de Itinerario: 0
+Resumen Ejecutivo: ...
+
+⚠️ TEST INCOMPLETO: El agente no llegó al estado 'done' o no generó itinerario.
+Errores reportados: ["5 validation errors for DayPlan\nsummary\n  Field required [type=missing, input_value={'day_number': 1, 'date':...d for public transport'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nactivities.0.type\n  Input should be 'cultural', 'nature', 'food', 'adventure', 'relax' or 'shopping' [type=literal_error, input_value='Landmark', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nactivities.0.source\n  Field required [type=missing, input_value={'time': '10:00', 'name':...8f2cff7bf590036a6eaf5d'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing\nactivities.1.type\n  Input should be 'cultural', 'nature', 'food', 'adventure', 'relax' or 'shopping' [type=literal_error, input_value='Square', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nactivities.1.source\n  Field required [type=missing, input_value={'time': '14:00', 'name':...070222b745bd5fabec1664'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"]
