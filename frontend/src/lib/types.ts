@@ -52,7 +52,7 @@ export interface TravelRequestDTO {
   outbound_date: string;
   return_date: string;
   num_passengers: number;
-  travel_style: "relaxed" | "active" | "mixed" | "cultural" | "adventure";
+  travel_style: "cultural" | "relax" | "adventure" | "gastronomic" | "mixed";
   interests: string[];
   max_price_per_night?: number;
   needs_car_rental: boolean;

@@ -17,7 +17,7 @@ class GroqService:
         self.max_requests_per_minute = 25
         self.semaphore = asyncio.Semaphore(self.max_requests_per_minute)
         self.request_timestamps: List[float] = []
-        self.model = "llama-3.3-70b-versatile"
+        self.model = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
         self._init_client()
 
     def _init_client(self):

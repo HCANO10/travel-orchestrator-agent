@@ -8,32 +8,38 @@ logger = logging.getLogger(__name__)
 async def orchestrator_node(state: MissionState) -> Dict[str, Any]:
     """
     Nodo final que consolida el presupuesto y genera un resumen ejecutivo.
+    Alineado con Pydantic v2 y arquitectura asíncrona.
     """
     try:
-        # 1. Calculate total_estimated_budget
-        # Extract individual components
-        flights = state.get("flights", [])
-        accommodations_comfort = state.get("accommodations_comfort", [])
-        itinerary_costs = state.get("total_estimated_budget", 0.0) # From itinerary_node (activities + food)
+        # 1. Consolidación de presupuesto
+        # Acceso directo a atributos de MissionState (BaseModel)
+        flights = state.flights or []
+        accommodations_comfort = state.accommodations_comfort or []
+        itinerary_costs = state.total_estimated_budget or 0.0
         
-        # Cheapest flight
-        cheapest_flight = min([f.total_price_pax for f in flights if f.total_price_pax > 0], default=0.0)
+        # Vuelo más barato
+        cheapest_flight = min([f.get("total_price_pax", 0.0) for f in flights if f.get("total_price_pax", 0.0) > 0], default=0.0)
         
-        # Cheapest comfort hotel
-        cheapest_hotel = min([h.total_stay_price for h in accommodations_comfort if h.total_stay_price > 0], default=0.0)
+        # Hotel más barato (tier comfort)
+        cheapest_hotel = min([h.get("total_stay_price", 0.0) for h in accommodations_comfort if h.get("total_stay_price", 0.0) > 0], default=0.0)
         
-        # Total consolidated budget
+        # Presupuesto total consolidado
         total_budget = cheapest_flight + cheapest_hotel + itinerary_costs
 
-        # 2. Generate executive summary via Groq
-        request = state.get("travel_request")
-        destination = request.destination if request else "tu destino"
-        num_days = (request.return_date - request.outbound_date).days if request else 0
-        travel_style = request.travel_style if request else "personalizado"
+        # 2. Generación de resumen ejecutivo vía Groq
+        request = state.travel_request
+        destination = request.destination or "tu destino" if request else "tu destino"
         
-        total_hotels = len(state.get("accommodations_budget", [])) + \
-                       len(state.get("accommodations_comfort", [])) + \
-                       len(state.get("accommodations_premium", []))
+        # Cálculo de días (manejo seguro de nulos)
+        num_days = 0
+        if request and request.outbound_date and request.return_date:
+            num_days = (request.return_date - request.outbound_date).days + 1
+            
+        travel_style = request.travel_style or "personalizado" if request else "personalizado"
+        
+        total_hotels = len(state.accommodations_budget or []) + \
+                       len(state.accommodations_comfort or []) + \
+                       len(state.accommodations_premium or [])
                        
         prompt = f"""
         Resume este plan de viaje en máximo 3 oraciones en español para el viajero:
@@ -42,29 +48,26 @@ async def orchestrator_node(state: MissionState) -> Dict[str, Any]:
         Estilo de viaje: {travel_style}
         Vuelos encontrados: {len(flights)} opciones
         Hoteles encontrados: {total_hotels} opciones (Budget/Comfort/Premium)
-        Itinerario: {len(state.get('itinerary', []))} días planificados
+        Itinerario: {len(state.itinerary)} días planificados
         Presupuesto total estimado: {total_budget}€
         Escribe un resumen cálido y entusiasta destacando lo mejor. Responde SOLO con el texto del resumen.
         """
         
         summary = await groq_service.generate_text(prompt, max_tokens=300)
 
-        # 3. Return state update
-        current_completed = state.get("nodes_completed", [])
+        # 3. Retorno de actualización de estado
         return {
             "total_estimated_budget": total_budget,
             "research_context": summary,
-            "nodes_completed": current_completed + ["orchestrator"],
+            "nodes_completed": state.nodes_completed + ["orchestrator"],
             "status": "done"
         }
 
     except Exception as e:
         logger.error(f"Orchestrator error: {str(e)}")
-        current_completed = state.get("nodes_completed", [])
-        current_errors = state.get("error_messages", [])
         return {
-            "total_estimated_budget": state.get("total_estimated_budget", 0.0),
-            "nodes_completed": current_completed + ["orchestrator"],
+            "total_estimated_budget": state.total_estimated_budget,
+            "nodes_completed": state.nodes_completed + ["orchestrator"],
             "status": "done",
-            "error_messages": current_errors + [f"Orchestrator error: {str(e)}"]
+            "error_messages": state.error_messages + [f"Orchestrator error: {str(e)}"]
         }

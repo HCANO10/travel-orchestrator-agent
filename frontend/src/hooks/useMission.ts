@@ -7,19 +7,8 @@ export function useMission(missionId?: string) {
   const [summary, setSummary] = useState<TravelProposalSummary | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [pollingActive, setPollingActive] = useState(false)
   
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current)
-      pollIntervalRef.current = null
-      setPollingActive(false)
-    }
-  }, [])
-
-  const fetchStatus = useCallback(async (id: string) => {
+  const refreshMission = useCallback(async (id: string) => {
     try {
       const state = await api.getMission(id)
       setMission(state)
@@ -27,29 +16,25 @@ export function useMission(missionId?: string) {
       if (state.status === "done") {
         const summaryData = await api.getMissionSummary(id)
         setSummary(summaryData)
-        stopPolling()
-      } else if (state.status === "error") {
-        stopPolling()
       }
     } catch (err: any) {
       setError(err.message)
-      stopPolling()
     }
-  }, [stopPolling])
-
-  const startPolling = useCallback((id: string) => {
-    stopPolling()
-    setPollingActive(true)
-    fetchStatus(id)
-    pollIntervalRef.current = setInterval(() => fetchStatus(id), 2000)
-  }, [fetchStatus, stopPolling])
+  }, [])
 
   const startMission = async (request: TravelRequestDTO) => {
     setLoading(true)
     setError(null)
     try {
       const { mission_id } = await api.createMission(request)
-      startPolling(mission_id)
+      // Persist mission_id in localStorage for /my-trips history
+      const raw = localStorage.getItem("travelPro_missions")
+      const ids: string[] = raw ? JSON.parse(raw) : []
+      if (!ids.includes(mission_id)) {
+        ids.unshift(mission_id)
+        localStorage.setItem("travelPro_missions", JSON.stringify(ids.slice(0, 50)))
+      }
+      await refreshMission(mission_id)
       return mission_id
     } catch (err: any) {
       setError(err.message)
@@ -64,7 +49,7 @@ export function useMission(missionId?: string) {
     try {
       const state = await api.answerClarification(id, answers)
       setMission(state)
-      startPolling(id)
+      await refreshMission(id)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -74,19 +59,17 @@ export function useMission(missionId?: string) {
 
   useEffect(() => {
     if (missionId && !mission) {
-      startPolling(missionId)
+      refreshMission(missionId)
     }
-    return () => stopPolling()
-  }, [missionId, startPolling, stopPolling, mission])
+  }, [missionId, refreshMission, mission])
 
   return {
     mission,
     summary,
     loading,
     error,
-    pollingActive,
+    refreshMission,
     startMission,
     submitAnswers,
-    stopPolling,
   }
 }

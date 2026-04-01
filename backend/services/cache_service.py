@@ -4,6 +4,7 @@ import hashlib
 import time
 from pathlib import Path
 from typing import Optional, Dict, Any, List
+from cachetools import LRUCache
 
 def cache_key(*args) -> str:
     """
@@ -21,6 +22,8 @@ class CacheService:
         """
         self.cache_dir = Path(cache_dir)
         self._ensure_cache_dir()
+        # LRU con máximo 500 misiones en memoria. Evita crecimiento infinito.
+        self._mission_cache: LRUCache = LRUCache(maxsize=500)
 
     def _ensure_cache_dir(self):
         """Crea el directorio de caché si no existe."""
@@ -103,8 +106,52 @@ class CacheService:
                 # Si el archivo está corrupto, también lo eliminamos
                 file_path.unlink()
                 deleted_count += 1
-                
+
         return deleted_count
+
+    async def update_mission_status(self, mission_id: str, state_update: Dict[str, Any]) -> None:
+        """
+        Actualiza el estado completo de la misión en memoria (para SSE y GET endpoints).
+        Hace un merge profundo: nodes_completed acumula, el resto sobreescribe.
+        Cuando la misión finaliza (status=done), persiste en Supabase si está configurado.
+        """
+        if mission_id not in self._mission_cache:
+            self._mission_cache[mission_id] = {
+                "nodes_completed": [],
+                "status": "init",
+                "last_update": time.time()
+            }
+
+        current = self._mission_cache[mission_id]
+
+        for key, value in state_update.items():
+            if key == "nodes_completed":
+                existing = current.get("nodes_completed", [])
+                if isinstance(value, list):
+                    current["nodes_completed"] = list(dict.fromkeys(existing + value))
+            elif key == "error_messages":
+                existing = current.get("error_messages", [])
+                if isinstance(value, list):
+                    current["error_messages"] = existing + value
+            else:
+                current[key] = value
+
+        current["last_update"] = time.time()
+        self._mission_cache[mission_id] = current
+
+        # Persist to Supabase when mission reaches a terminal state
+        if current.get("status") in ("done", "error"):
+            try:
+                from backend.infrastructure.database.supabase_service import supabase_service
+                if supabase_service.enabled:
+                    import asyncio
+                    asyncio.create_task(supabase_service.upsert_mission(mission_id, dict(current)))
+            except Exception:
+                pass  # Never block the pipeline due to persistence errors
+
+    async def get_mission_status(self, mission_id: str) -> Optional[Dict[str, Any]]:
+        """Recupera el estado de misión desde la caché de memoria."""
+        return self._mission_cache.get(mission_id)
 
 # Constantes de TTL sugeridas por el usuario
 CACHE_TTL = {

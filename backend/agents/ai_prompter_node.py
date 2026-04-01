@@ -11,19 +11,24 @@ async def ai_prompter_node(state: MissionState) -> dict:
     """
     try:
         # 1. Extract from state
-        request = state.get("travel_request")
+        request = state.travel_request
         if not request:
             raise ValueError("Travel request not found in mission state.")
 
-        destination = request.destination
-        travel_style = request.travel_style
-        interests = request.interests
+        destination = request.destination or "unknown"
+        travel_style = request.travel_style or "comfort"
+        interests = request.interests or []
         outbound_date = request.outbound_date
         return_date = request.return_date
-        num_passengers = request.num_passengers
         
-        # Calculate number of days
-        num_days = (return_date - outbound_date).days
+        # Calculate number of days (handle strings or dates)
+        from datetime import date
+        if isinstance(outbound_date, str): outbound_date = date.fromisoformat(outbound_date)
+        if isinstance(return_date, str): return_date = date.fromisoformat(return_date)
+        
+        num_days = 0
+        if outbound_date and return_date:
+            num_days = (return_date - outbound_date).days
 
         # 2. Decide if clarification is needed
         needs_clarification = False
@@ -51,17 +56,15 @@ async def ai_prompter_node(state: MissionState) -> dict:
 
         # 3. Handle clarification if needed
         if needs_clarification:
-            known_data = request.model_dump(exclude_none=True)
-            
             questions = await groq_service.generate_clarification_questions(
                 destination=destination,
-                known_data=known_data
+                known_data=request.model_dump(mode="json", exclude_none=True)
             )
             
             return {
                 "clarification_questions": questions,
                 "clarifications_answered": False,
-                "nodes_completed": state.get("nodes_completed", []) + ["ai_prompter"],
+                "nodes_completed": state.nodes_completed + ["ai_prompter"],
                 "status": "clarifying"
             }
 
@@ -70,7 +73,7 @@ async def ai_prompter_node(state: MissionState) -> dict:
         return {
             "clarification_questions": [],
             "clarifications_answered": True,
-            "nodes_completed": state.get("nodes_completed", []) + ["ai_prompter"],
+            "nodes_completed": state.nodes_completed + ["ai_prompter"],
             "status": "searching"
         }
 
@@ -79,7 +82,7 @@ async def ai_prompter_node(state: MissionState) -> dict:
         logger.error(f"AI prompter error: {str(e)}")
         return {
             "clarifications_answered": True,
-            "nodes_completed": state.get("nodes_completed", []) + ["ai_prompter"],
+            "nodes_completed": state.nodes_completed + ["ai_prompter"],
             "status": "searching",
-            "error_messages": state.get("error_messages", []) + [f"AI prompter error: {str(e)}"]
+            "error_messages": state.error_messages + [f"AI prompter error: {str(e)}"]
         }

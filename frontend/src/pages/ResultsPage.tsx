@@ -1,252 +1,346 @@
 import React from "react"
 import { useParams, Link } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import { useMission } from "../hooks/useMission"
 import { 
   Plane, Hotel, MapPin, Calendar, Users, 
   Loader2, CheckCircle2, AlertCircle, TrendingUp,
-  ArrowRight, ExternalLink, Info
+  ArrowRight, ExternalLink, Info, Sparkles, Navigation
 } from "lucide-react"
+import { useAgentStream } from "../hooks/useAgentStream"
+import { AgentTracker } from "../components/AgentTracker"
+import { VividCard } from "../components/VividCard"
 
-const FlightCard = ({ flight }: { flight: any }) => (
-  <div className="bg-card border rounded-xl p-6 hover:shadow-md transition-all group">
-    <div className="flex justify-between items-start mb-4">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
-          <Plane className="h-5 w-5 text-blue-600" />
+const FlightCard = ({ flight, index }: { flight: any, index: number }) => (
+  <VividCard delay={index * 0.1} className="p-0 overflow-hidden group">
+    <div className="p-6">
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-violet-50 flex items-center justify-center ring-1 ring-violet-100 group-hover:scale-110 transition-transform">
+            <Plane className="h-6 w-6 text-violet-600" />
+          </div>
+          <div>
+            <h4 className="font-black text-slate-900 text-lg">{flight.airline}</h4>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <span>{flight.source}</span>
+              <span className="h-1 w-1 rounded-full bg-slate-300" />
+              <span>Directo</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h4 className="font-bold text-slate-900">{flight.airline}</h4>
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">{flight.source}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <span className="text-2xl font-black text-indigo-600">{flight.price_per_person}€</span>
-        <p className="text-[10px] text-muted-foreground uppercase">Por persona</p>
-      </div>
-    </div>
-    
-    <div className="flex items-center justify-between text-sm py-4 border-y border-dashed border-slate-100 mb-4">
-      <div className="text-center">
-        <p className="font-bold">{new Date(flight.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-        <p className="text-xs text-muted-foreground">{flight.origin_airport}</p>
-      </div>
-      <div className="flex-1 px-4 flex flex-col items-center">
-        <span className="text-[10px] text-slate-400 font-medium mb-1">{Math.floor(flight.duration_minutes / 60)}h {flight.duration_minutes % 60}m</span>
-        <div className="w-full h-[1px] bg-slate-200 relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-slate-400" />
+        <div className="text-right">
+          <div className="text-3xl font-black text-transparent bg-clip-text vivid-gradient tracking-tight">
+            {flight.price_per_person}€
+          </div>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Por persona</p>
         </div>
       </div>
-      <div className="text-center">
-        <p className="font-bold">{new Date(flight.arrival_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-        <p className="text-xs text-muted-foreground">{flight.destination_airport}</p>
-      </div>
-    </div>
+      
+      <div className="flex items-center justify-between bg-slate-50/50 rounded-2xl p-6 mb-6">
+        <div className="text-center">
+          <p className="text-2xl font-black text-slate-800">
+            {new Date(flight.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">{flight.origin_airport}</p>
+        </div>
+        
+        <div className="flex-1 px-8 flex flex-col items-center">
+          <span className="text-[10px] text-slate-400 font-black mb-2 uppercase tracking-tighter">
+            {Math.floor(flight.duration_minutes / 60)}h {flight.duration_minutes % 60}m
+          </span>
+          <div className="w-full h-[2px] bg-slate-200 relative">
+            <div className="absolute top-1/2 left-0 -translate-y-1/2 h-2 w-2 rounded-full bg-slate-300 ring-4 ring-white" />
+            <div className="absolute top-1/2 right-0 -translate-y-1/2 h-2 w-2 rounded-full bg-violet-400 ring-4 ring-white shadow-lg shadow-violet-200" />
+            <Navigation className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-slate-300 bg-white p-0.5 rounded-full" />
+          </div>
+        </div>
 
-    {flight.booking_link && (
-      <a 
-        href={flight.booking_link} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all border border-slate-200"
-      >
-        Reservar ahora <ExternalLink className="h-3 w-3" />
-      </a>
-    )}
-  </div>
+        <div className="text-center">
+          <p className="text-2xl font-black text-slate-800">
+            {new Date(flight.arrival_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">{flight.destination_airport}</p>
+        </div>
+      </div>
+
+      {flight.booking_link && (
+        <a 
+          href={flight.booking_link} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="w-full py-4 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-black flex items-center justify-center gap-3 transition-all border-2 border-slate-100 hover:border-violet-200 shadow-sm"
+        >
+          Sellar Reserva <ExternalLink className="h-4 w-4 text-violet-500" />
+        </a>
+      )}
+    </div>
+  </VividCard>
 )
 
-const HotelCard = ({ hotel }: { hotel: any }) => (
-  <div className="bg-card border rounded-xl overflow-hidden hover:shadow-md transition-all">
-    <div className="p-6">
-      <div className="flex justify-between items-start mb-2">
-        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest ${
-          hotel.tier === 'premium' ? 'bg-amber-100 text-amber-700' : 
-          hotel.tier === 'comfort' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+const HotelCard = ({ hotel, index }: { hotel: any, index: number }) => (
+  <VividCard delay={index * 0.1} className="p-0 overflow-hidden flex flex-col h-full group">
+    <div className="p-6 flex-1">
+      <div className="flex justify-between items-start mb-4">
+        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ring-1 ${
+          hotel.tier === 'premium' ? 'bg-amber-50 text-amber-600 ring-amber-100' : 
+          hotel.tier === 'comfort' ? 'bg-sky-50 text-sky-600 ring-sky-100' : 'bg-emerald-50 text-emerald-600 ring-emerald-100'
         }`}>
-          {hotel.tier}
+          {hotel.tier === 'premium' ? 'Lujo' : 
+          hotel.tier === 'comfort' ? 'Confort' : 'Económico'}
         </span>
-        <span className="text-lg font-bold text-slate-900">{hotel.price_per_night}€<span className="text-xs font-normal text-muted-foreground">/noche</span></span>
+        <div className="text-right">
+          <span className="text-2xl font-black text-slate-900">{hotel.price_per_night}€</span>
+          <span className="text-[10px] font-bold text-slate-400 block uppercase">/noche</span>
+        </div>
       </div>
-      <h4 className="font-bold text-slate-800 text-lg mb-1 leading-tight">{hotel.name}</h4>
-      <div className="flex items-center gap-1 text-slate-500 text-xs mb-4">
-        <MapPin className="h-3 w-3" />
+      
+      <h4 className="font-black text-slate-900 text-xl mb-2 group-hover:text-violet-600 transition-colors leading-tight">{hotel.name}</h4>
+      <div className="flex items-center gap-2 text-slate-400 font-medium text-sm mb-6">
+        <MapPin className="h-4 w-4 text-slate-300" />
         <span className="truncate">{hotel.address}</span>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-50 mb-4 bg-slate-50/50 -mx-6 px-6">
+      <div className="grid grid-cols-2 gap-6 py-4 border-y border-slate-50 mb-6 bg-slate-50/30 -mx-6 px-6">
         <div>
-          <p className="text-[10px] uppercase text-muted-foreground font-bold">Total Estancia</p>
-          <p className="font-bold text-indigo-600">{hotel.total_stay_price}€</p>
+          <p className="text-[10px] uppercase text-slate-400 font-black mb-1 tracking-wider">Total Estancia</p>
+          <p className="font-black text-slate-900 text-lg leading-none">{hotel.total_stay_price}€</p>
         </div>
         <div>
-          <p className="text-[10px] uppercase text-muted-foreground font-bold">Noches</p>
-          <p className="font-bold">{hotel.nights}</p>
+          <p className="text-[10px] uppercase text-slate-400 font-black mb-1 tracking-wider">Noches</p>
+          <p className="font-black text-slate-900 text-lg leading-none">{hotel.nights}</p>
         </div>
       </div>
+    </div>
 
+    <div className="p-4 bg-slate-50/50 border-t border-slate-50">
       {hotel.booking_link && (
         <a 
           href={hotel.booking_link} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/10"
+          className="w-full py-3.5 vivid-gradient text-white rounded-xl text-sm font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-violet-200/50 hover:scale-[1.02]"
         >
-          Ver en {hotel.source.charAt(0).toUpperCase() + hotel.source.slice(1)} <ExternalLink className="h-3 w-3" />
+          Reservar en {hotel.source.charAt(0).toUpperCase() + hotel.source.slice(1)}
         </a>
       )}
     </div>
-  </div>
+  </VividCard>
 )
 
 export const ResultsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const { mission, loading, error, pollingActive } = useMission(id)
+  const { mission, loading, error: missionError, refreshMission } = useMission(id)
+  const { status, completedNodes, error: streamError } = useAgentStream(id || '')
 
-  if (!mission) {
+  React.useEffect(() => {
+    if (status === 'done' && id) {
+      refreshMission(id)
+    }
+  }, [status, id, refreshMission])
+
+  if (missionError) {
     return (
-      <div className="container h-[60vh] flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-10 w-10 text-indigo-600 animate-spin" />
-        <p className="text-slate-500 font-medium">Buscando misión en órbita...</p>
+      <div className="container py-20 text-center">
+        <div className="inline-flex h-20 w-20 rounded-full bg-rose-50 items-center justify-center mb-6">
+          <AlertCircle className="h-10 w-10 text-rose-500" />
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 mb-4">Error en la misión</h2>
+        <p className="text-slate-500 mb-8 max-w-md mx-auto">{missionError}</p>
+        <Link to="/" className="px-8 py-3 vivid-gradient text-white font-black rounded-xl shadow-xl shadow-violet-200">Volver al inicio</Link>
       </div>
     )
   }
 
-  const isComplete = mission.status === "done"
-  const isClarifying = mission.status === "clarifying"
+  const isComplete = mission?.status === "done"
+  const isClarifying = mission?.status === "clarifying"
 
   return (
-    <div className="container py-10 px-4">
-      {/* Header Summary */}
-      <div className="bg-slate-900 rounded-3xl p-8 mb-10 text-white relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <Plane className="h-32 w-32 -rotate-12" />
-        </div>
+    <div className="max-w-[1600px] mx-auto px-4 lg:px-8 py-10 min-h-[calc(100vh-64px)]">
+      <div className="flex flex-col lg:flex-row gap-10">
         
-        <div className="relative z-10">
-          <div className="flex flex-wrap items-center gap-3 mb-6">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-              isComplete ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-              mission.status === 'error' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
-            }`}>
-              {isComplete ? <CheckCircle2 className="h-3 w-3" /> : pollingActive ? <Loader2 className="h-3 w-3 animate-spin" /> : <AlertCircle className="h-3 w-3" />}
-              {mission.status.toUpperCase()}
-            </span>
-            <span className="text-slate-400 text-xs font-medium uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full">
-              ID: {mission.id.slice(0,8)}...
-            </span>
-          </div>
-
-          <h2 className="text-4xl font-black mb-4">Propuesta: {mission.travel_request.destination}</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                <Calendar className="h-4 w-4 text-indigo-400" />
+        {/* LEFT PANEL: Mission Control Sidebar */}
+        <aside className="lg:w-[380px] flex-shrink-0">
+          <div className="lg:sticky lg:top-24 space-y-6">
+            
+            {/* Status Card */}
+            <div className="glass-card bg-white p-6 rounded-3xl ring-1 ring-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                <Sparkles className="h-20 w-20 vivid-gradient" />
               </div>
-              <div>
-                <p className="text-slate-500 text-[10px] font-bold uppercase">Fechas</p>
-                <p className="font-semibold">{new Date(mission.travel_request.outbound_date).toLocaleDateString()} - {new Date(mission.travel_request.return_date).toLocaleDateString()}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                <Users className="h-4 w-4 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-slate-500 text-[10px] font-bold uppercase">Pasajeros</p>
-                <p className="font-semibold">{mission.travel_request.num_passengers}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center">
-                <TrendingUp className="h-4 w-4 text-teal-400" />
-              </div>
-              <div>
-                <p className="text-slate-500 text-[10px] font-bold uppercase">Estilo</p>
-                <p className="font-semibold capitalize">{mission.travel_request.travel_style}</p>
-              </div>
-            </div>
-            {isComplete && (
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <span className="font-bold text-emerald-400 text-xs">€</span>
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
+                  isComplete ? 'bg-emerald-50 text-emerald-600' : 'bg-violet-50 text-violet-600'
+                }`}>
+                  {isComplete ? <CheckCircle2 className="h-6 w-6" /> : <Loader2 className="h-6 w-6 animate-spin" />}
                 </div>
                 <div>
-                  <p className="text-slate-500 text-[10px] font-bold uppercase">Presupuesto</p>
-                  <p className="font-black text-emerald-400 text-lg">~{mission.total_estimated_budget}€</p>
+                  <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Misión</h3>
+                  <p className="text-xl font-black text-slate-900 leading-none">
+                    {isComplete ? "Completada" : "En Proceso..."}
+                  </p>
                 </div>
               </div>
+
+              {mission && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-violet-500" />
+                      <span className="text-sm font-bold text-slate-600">{mission.travel_request?.destination ?? "—"}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <div className="bg-slate-50 p-3 rounded-2xl">
+                      <p className="mb-1 opacity-60">Desde</p>
+                      <p className="text-slate-700">
+                        {mission.travel_request?.outbound_date
+                          ? new Date(mission.travel_request.outbound_date).toLocaleDateString()
+                          : "—"}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 p-3 rounded-2xl">
+                      <p className="mb-1 opacity-60">Viajeros</p>
+                      <p className="text-slate-700">{mission.travel_request?.num_passengers ?? "—"}</p>
+                    </div>
+                  </div>
+
+                  {isComplete && (
+                   <div className="pt-2">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1 text-center">Presupuesto Estimado</p>
+                     <div className="py-4 vivid-gradient text-white text-center rounded-2xl shadow-xl shadow-violet-200">
+                       <span className="text-3xl font-black tracking-tighter">~{mission.total_estimated_budget ?? 0}€</span>
+                     </div>
+                   </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Agent Thinking Progress */}
+            <div className="glass-card bg-white p-6 rounded-3xl ring-1 ring-slate-100">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <Navigation className="h-3.5 w-3.5" /> Bitácora del Agente
+              </h4>
+              <AgentTracker status={status} completedNodes={completedNodes} />
+            </div>
+            
+            {isClarifying && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-6 bg-indigo-50 border-2 border-indigo-200 rounded-3xl text-center space-y-4 shadow-xl shadow-indigo-100"
+              >
+                <Info className="h-8 w-8 text-indigo-600 mx-auto" />
+                <h3 className="font-black text-indigo-900 leading-tight">Acción Requerida</h3>
+                <p className="text-indigo-700 text-xs font-bold leading-relaxed">El agente ha encontrado opciones que requieren tu validación personal.</p>
+                <Link 
+                  to={`/mission/${id}/clarify`} 
+                  className="w-full py-3 bg-indigo-600 text-white text-xs font-black rounded-xl inline-block shadow-lg shadow-indigo-600/20 uppercase tracking-wider"
+                >
+                  Responder ahora
+                </Link>
+              </motion.div>
             )}
           </div>
-        </div>
-      </div>
+        </aside>
 
-      {mission.research_context && (
-        <div className="mb-12 p-6 glass rounded-2xl flex gap-4 items-center">
-          <div className="h-12 w-12 rounded-xl bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
-            <Info className="h-6 w-6 text-indigo-600" />
-          </div>
-          <p className="text-slate-700 italic leading-relaxed text-lg">"{mission.research_context}"</p>
-        </div>
-      )}
-
-      {isClarifying && (
-        <div className="mb-12 bg-indigo-50 border border-indigo-200 p-8 rounded-3xl text-center space-y-6">
-          <h3 className="text-2xl font-bold text-indigo-900">Nuestra IA necesita unos detalles más</h3>
-          <p className="text-indigo-700 max-w-xl mx-auto">Para que tu viaje sea perfecto, responde a estas preguntas del agente:</p>
-          <div className="flex justify-center">
-             <Link to={`/mission/${id}/clarify`} className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-xl shadow-indigo-600/20">Responder Preguntas</Link>
-          </div>
-        </div>
-      )}
-
-      {/* Main Results Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        
-        {/* Flights Column */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black flex items-center gap-2 uppercase tracking-tight">
-              <Plane className="h-6 w-6 text-indigo-600" /> Vuelos
-            </h3>
-            <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-xs font-bold">{mission.flights.length}</span>
-          </div>
-          {mission.flights.length > 0 ? (
-            <div className="space-y-4">
-              {mission.flights.map(f => <FlightCard key={f.id} flight={f} />)}
-            </div>
-          ) : (
-            <div className="bg-slate-50 rounded-2xl p-10 text-center border border-dashed border-slate-200">
-              <Loader2 className="h-8 w-8 text-slate-300 animate-spin mx-auto mb-4" />
-              <p className="text-slate-400 font-medium">Buscando las mejores rutas comerciales...</p>
-            </div>
-          )}
-        </div>
-
-        {/* Hotels Column */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-black flex items-center gap-2 uppercase tracking-tight">
-              <Hotel className="h-6 w-6 text-indigo-600" /> Alojamientos recomendados
-            </h3>
-            {isComplete && (
-              <Link to={`/mission/${id}/itinerary`} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
-                Ver Itinerario Completo <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mission.accommodations_comfort.length > 0 ? (
-              mission.accommodations_comfort.slice(0,4).map(h => <HotelCard key={h.id} hotel={h} />)
-            ) : (
-              <div className="col-span-full bg-slate-50 rounded-2xl p-20 text-center border border-dashed border-slate-200">
-                 <Loader2 className="h-8 w-8 text-slate-300 animate-spin mx-auto mb-4" />
-                 <p className="text-slate-400 font-medium">Verificando disponibilidad de hoteles premium...</p>
+        {/* RIGHT PANEL: Scrollable Content Area */}
+        <main className="flex-1 space-y-12 min-w-0">
+          
+          {/* Intro Context */}
+          {mission?.research_context && (
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="relative p-10 bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 px-8 py-4 opacity-5 rotate-12">
+                <Sparkles className="h-32 w-32" />
               </div>
-            )}
-          </div>
-        </div>
+              <div className="relative z-10 flex gap-6 items-start">
+                <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center flex-shrink-0 animate-bounce transition-all duration-1000">
+                  <Info className="h-7 w-7 text-indigo-600" />
+                </div>
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                    Visión Estratégica del Agente
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  </h2>
+                  <p className="text-slate-500 italic leading-relaxed text-xl font-medium font-serif">
+                    "{mission.research_context}"
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Flights Section */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-3xl font-black text-slate-900 flex items-center gap-3 tracking-tighter uppercase">
+                <div className="h-8 w-8 bg-violet-600 rounded-lg flex items-center justify-center">
+                  <Plane className="h-5 w-5 text-white" />
+                </div>
+                Vuelos Encontrados
+              </h3>
+              {mission && (
+                <span className="bg-slate-100 text-slate-500 px-4 py-1 rounded-full text-xs font-black border border-slate-200">
+                  {mission.flights?.length ?? 0} OPCIONES
+                </span>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <AnimatePresence>
+                {mission?.flights.length ? (
+                  mission.flights.map((f, i) => (
+                    <FlightCard key={f.id} flight={f} index={i} />
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 glass-card bg-white border-2 border-dashed border-slate-100 flex flex-col items-center justify-center space-y-4 opacity-60">
+                    <Loader2 className="h-10 w-10 text-violet-400 animate-spin" />
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Escaneando corredores aéreos...</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </section>
+
+          {/* Accommodations Section */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-3xl font-black text-slate-900 flex items-center gap-3 tracking-tighter uppercase">
+                <div className="h-8 w-8 bg-sky-600 rounded-lg flex items-center justify-center">
+                  <Hotel className="h-5 w-5 text-white" />
+                </div>
+                Alojamientos Curados
+              </h3>
+              {isComplete && (
+                <Link to={`/mission/${id}/itinerary`} className="text-xs font-black text-violet-600 hover:text-violet-700 flex items-center gap-2 group uppercase tracking-widest bg-violet-50 px-4 py-2 rounded-full transition-all hover:pr-6">
+                  Itinerario Detallado <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <AnimatePresence>
+                {mission?.accommodations_comfort.length ? (
+                  mission.accommodations_comfort.map((h, i) => (
+                    <HotelCard key={h.id} hotel={h} index={i} />
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 glass-card bg-white border-2 border-dashed border-slate-100 flex flex-col items-center justify-center space-y-4 opacity-60">
+                    <Loader2 className="h-10 w-10 text-sky-400 animate-spin" />
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Validando disponibilidad hotelera...</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </section>
+
+        </main>
       </div>
     </div>
   )

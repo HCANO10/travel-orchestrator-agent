@@ -18,33 +18,41 @@ async def itinerary_node(state: MissionState) -> dict:
     """
     try:
         # 1. Extract from state
-        request = state.get("travel_request")
+        # Acceso robusto a atributos de MissionState
+        request = state.travel_request
         if not request:
             raise ValueError("Travel request not found in mission state.")
 
-        destination = request.destination
+        # request es un dict (de momento)
+        destination = request.destination or "unknown"
         outbound_date = request.outbound_date
         return_date = request.return_date
-        travel_style = request.travel_style
-        interests = request.interests
-        num_passengers = request.num_passengers
+        travel_style = request.travel_style or "comfort"
+        interests = request.interests or []
+        num_passengers = request.num_passengers or 1
         
-        num_days = (return_date - outbound_date).days
+        # outbound_date and return_date are already date objects if coming from DTO
+        num_days = 0
+        if outbound_date and return_date:
+            num_days = (return_date - outbound_date).days
+        
         if num_days <= 0:
             num_days = 1
 
         # 2. Get accommodation address for context
         accommodation_address = f"{destination} city center"
-        selected = state.get("selected_accommodation")
+        selected = state.selected_accommodation
         
-        if selected and hasattr(selected, 'address') and selected.address:
-            accommodation_address = selected.address
+        if selected:
+            # selected is still a dict or None from MissionState.selected_accommodation
+            accommodation_address = selected.get("address") or f"{destination} center"
         else:
-            comfort_list = state.get("accommodations_comfort", [])
+            comfort_list = state.accommodations_comfort or []
             if comfort_list and len(comfort_list) > 0:
                 first_comfort = comfort_list[0]
-                if hasattr(first_comfort, 'address') and first_comfort.address:
-                    accommodation_address = first_comfort.address
+                # If first_comfort is a dict, use .get(); if it's a DTO, use attribute access.
+                # Currently MissionState.accommodations_comfort: List[Dict[str, Any]]
+                accommodation_address = first_comfort.get("address") if isinstance(first_comfort, dict) else getattr(first_comfort, "address", None) or f"{destination} center"
 
         # 3. Fetch activities (with cache)
         act_key = cache_key("activities", destination, ",".join(sorted(interests)))
@@ -148,21 +156,18 @@ async def itinerary_node(state: MissionState) -> dict:
         total_estimated = activity_costs + food_estimate
 
         # 8. Return state update
-        current_completed = state.get("nodes_completed", [])
         return {
-            "itinerary": day_plans,
+            "itinerary": [d.model_dump(mode="json") for d in day_plans],
             "total_estimated_budget": total_estimated,
-            "nodes_completed": current_completed + ["itinerary"],
+            "nodes_completed": state.nodes_completed + ["itinerary"],
             "status": "done"
         }
 
     except Exception as e:
         logger.error(f"Itinerary error: {str(e)}")
-        current_completed = state.get("nodes_completed", [])
-        current_errors = state.get("error_messages", [])
         return {
             "itinerary": [],
-            "nodes_completed": current_completed + ["itinerary"],
+            "nodes_completed": state.nodes_completed + ["itinerary"],
             "status": "done",
-            "error_messages": current_errors + [f"Itinerary error: {str(e)}"]
+            "error_messages": state.error_messages + [f"Itinerary error: {str(e)}"]
         }

@@ -1,6 +1,6 @@
 import { MissionState, TravelProposalSummary, TravelRequestDTO } from "./types"
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1"
+const API_BASE = import.meta.env.VITE_API_URL || "/api/v1/travel"
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -10,7 +10,7 @@ export class ApiError extends Error {
 }
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${path}`
+  const url = `${API_BASE}${path}`
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -28,23 +28,32 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  /** Crea una nueva misión y devuelve el mission_id */
   async createMission(request: TravelRequestDTO): Promise<{ mission_id: string; status: string }> {
-    return apiFetch("/mission", {
+    // El nuevo endpoint /travel/plan espera { user_id, prompt }
+    // Construimos un prompt desde el DTO para compatibilidad
+    const prompt = `Planifica un viaje desde ${request.origin} a ${request.destination} del ${request.outbound_date} al ${request.return_date} para ${request.num_passengers} personas. Estilo: ${request.travel_style}. Intereses: ${request.interests.join(", ")}.`
+    const user_id = `user_${Date.now()}`
+    const data = await apiFetch<{ mission_id: string; status: string; message: string }>("/plan", {
       method: "POST",
-      body: JSON.stringify(request),
+      body: JSON.stringify({ user_id, prompt }),
     })
+    return { mission_id: data.mission_id, status: data.status }
   },
 
+  /** Obtiene el estado completo de una misión */
   async getMission(id: string): Promise<MissionState> {
     const data = await apiFetch<{ state: MissionState; progress_percent: number }>(`/mission/${id}`)
     return data.state
   },
 
+  /** Obtiene el resumen final de una misión completada */
   async getMissionSummary(id: string): Promise<TravelProposalSummary> {
     return apiFetch(`/mission/${id}/summary`)
   },
 
-  async answerClarification(id: string, answers: Record<string, any>): Promise<MissionState> {
+  /** Envía respuestas a preguntas de aclaración */
+  async answerClarification(id: string, answers: Record<string, any>): Promise<{ status: string }> {
     return apiFetch(`/mission/${id}/answer`, {
       method: "POST",
       body: JSON.stringify({ answers }),

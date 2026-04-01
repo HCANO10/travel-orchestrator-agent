@@ -1,4 +1,5 @@
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -23,16 +24,21 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Travel Orchestrator API",
     description="Backend API para el Agente Orquestador de Viajes",
-    version="4.0.0"
+    version="5.0.0"
 )
 
 # Configuración de CORS
+# En producción, define ALLOWED_ORIGINS en el .env (ej: "https://tudominio.com,https://www.tudominio.com")
+# En desarrollo, si no está definido, se permite localhost:5173
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
+allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Permitir todos los orígenes en desarrollo
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key"],
 )
 
 # Incluir rutas de la API
