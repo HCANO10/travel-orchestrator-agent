@@ -54,6 +54,16 @@ class TravelResponseDTO(BaseModel):
     message: str
 
 from src.agents.travel_agent.graph import compiled_graph
+from backend.infrastructure.database.supabase_service import supabase_service
+
+async def _get_state_with_fallback(mission_id: str):
+    """Busca misión en caché; si no está, la recupera de Supabase (fallback tras cold start)."""
+    state = await cache_service.get_mission_status(mission_id)
+    if not state and supabase_service.enabled:
+        state = await supabase_service.get_mission(mission_id)
+        if state:
+            await cache_service.update_mission_status(mission_id, state)
+    return state
 
 async def run_mission_and_track(mission_id: str, initial_state: MissionState):
     """
@@ -184,7 +194,7 @@ async def stream_mission_status(mission_id: str, request: Request):
 @router.get("/mission/{mission_id}")
 async def get_mission_state(mission_id: str):
     """Retorna el estado completo de una misión (vuelos, hoteles, itinerario)."""
-    state = await cache_service.get_mission_status(mission_id)
+    state = await _get_state_with_fallback(mission_id)
     if not state:
         raise HTTPException(status_code=404, detail="Mission not found")
     total_nodes = 5
@@ -195,7 +205,7 @@ async def get_mission_state(mission_id: str):
 @router.get("/mission/{mission_id}/summary")
 async def get_mission_summary(mission_id: str):
     """Retorna el resumen formateado de una misión completada."""
-    state = await cache_service.get_mission_status(mission_id)
+    state = await _get_state_with_fallback(mission_id)
     if not state:
         raise HTTPException(status_code=404, detail="Mission not found")
     request = state.get("travel_request") or {}

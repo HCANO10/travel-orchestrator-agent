@@ -21,7 +21,11 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new ApiError(response.status, errorData.detail || "Error en la petición API")
+    const detail = errorData.detail || "Error en la petición API"
+    const message = response.status === 404
+      ? "Esta misión ya no existe en el servidor (el servidor se reinició). Crea una nueva misión."
+      : detail
+    throw new ApiError(response.status, message)
   }
 
   return response.json()
