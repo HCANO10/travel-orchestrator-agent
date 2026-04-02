@@ -73,7 +73,7 @@ async def run_mission_and_track(mission_id: str, initial_state: MissionState):
     await cache_service.update_mission_status(mission_id, {"status": "init", "nodes_completed": []})
     
     try:
-        async for event in compiled_graph.astream(initial_state):
+        async for event in compiled_graph.astream(initial_state.model_dump()):
             # LangGraph astream retorna diccionarios con el nombre del nodo como clave
             for node_name, state_update in event.items():
                 # Actualizar progreso en la caché transitoria
