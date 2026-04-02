@@ -12,8 +12,8 @@ class FlightDTO(BaseModel):
     airline: str
     departure_time: datetime
     arrival_time: datetime
-    origin_airport: str = Field(..., pattern=r"^[A-Z]{3}$")
-    destination_airport: str = Field(..., pattern=r"^[A-Z]{3}$")
+    origin_airport: str
+    destination_airport: str
     price_per_person: float
     total_price_pax: float
     duration_minutes: int

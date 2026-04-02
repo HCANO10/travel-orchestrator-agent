@@ -24,6 +24,8 @@ def route_after_planning(state: MissionState) -> Literal["clarify", "search"]:
     """Determina si el planner necesita aclaraciones adicionales o procede a búsqueda."""
     if state.status == "clarifying":
         return "clarify"
+    if state.status == "error":
+        return "clarify"  # Route to END so the graph terminates cleanly on planner error
     return "search"
 
 # 2. Construcción del Grafo
