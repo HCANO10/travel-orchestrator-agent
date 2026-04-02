@@ -59,6 +59,7 @@ class SupabaseService:
             # Serializar campos complejos a JSON string para almacenamiento
             payload = {
                 "id": mission_id,
+                "user_id": state.get("user_id"),
                 "status": state.get("status", "unknown"),
                 "state_json": json.dumps(state, default=str),
                 "destination": self._extract_destination(state),

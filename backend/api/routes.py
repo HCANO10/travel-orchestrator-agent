@@ -103,6 +103,8 @@ async def plan_travel(request: TravelRequestDTO, background_tasks: BackgroundTas
         )
         
         # Encolado en BackgroundTasks de FastAPI (Wrapper con tracking)
+        # Store user_id in cache so Supabase persistence can link the mission
+        await cache_service.update_mission_status(mission_id, {"user_id": request.user_id})
         background_tasks.add_task(run_mission_and_track, mission_id, initial_state)
         
         logger.info(f"Misión {mission_id} iniciada para el usuario {request.user_id} via LangGraph.")

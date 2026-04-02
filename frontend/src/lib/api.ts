@@ -29,11 +29,9 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   /** Crea una nueva misión y devuelve el mission_id */
-  async createMission(request: TravelRequestDTO): Promise<{ mission_id: string; status: string }> {
-    // El nuevo endpoint /travel/plan espera { user_id, prompt }
-    // Construimos un prompt desde el DTO para compatibilidad
+  async createMission(request: TravelRequestDTO, userId?: string): Promise<{ mission_id: string; status: string }> {
     const prompt = `Planifica un viaje desde ${request.origin} a ${request.destination} del ${request.outbound_date} al ${request.return_date} para ${request.num_passengers} personas. Estilo: ${request.travel_style}. Intereses: ${request.interests.join(", ")}.`
-    const user_id = `user_${Date.now()}`
+    const user_id = userId ?? `anon_${Date.now()}`
     const data = await apiFetch<{ mission_id: string; status: string; message: string }>("/plan", {
       method: "POST",
       body: JSON.stringify({ user_id, prompt }),

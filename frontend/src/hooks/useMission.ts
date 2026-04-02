@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { api } from "../lib/api"
 import { MissionState, TravelProposalSummary, TravelRequestDTO } from "../lib/types"
+import { useAuth } from "../contexts/AuthContext"
 
 export function useMission(missionId?: string) {
+  const { user } = useAuth()
   const [mission, setMission] = useState<MissionState | null>(null)
   const [summary, setSummary] = useState<TravelProposalSummary | null>(null)
   const [loading, setLoading] = useState(false)
@@ -26,7 +28,7 @@ export function useMission(missionId?: string) {
     setLoading(true)
     setError(null)
     try {
-      const { mission_id } = await api.createMission(request)
+      const { mission_id } = await api.createMission(request, user?.id)
       // Persist mission_id in localStorage for /my-trips history
       const raw = localStorage.getItem("travelPro_missions")
       const ids: string[] = raw ? JSON.parse(raw) : []
