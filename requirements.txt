@@ -19,20 +19,14 @@ pydantic-settings==2.2.1
 groq==0.5.0
 tiktoken==0.6.0
 
-# HTTP / Scraping
+# HTTP
 aiohttp==3.9.3
-playwright==1.42.0
 
 # Cache utilities
 cachetools==5.3.3
 
 # Storage
-redis==5.0.3
-supabase==2.4.2  # Optional: only needed if SUPABASE_URL/KEY are configured
+supabase==2.4.2
 
 # Resilience
 tenacity==8.2.3
-
-# Testing
-pytest==8.1.1
-pytest-asyncio==0.23.5
