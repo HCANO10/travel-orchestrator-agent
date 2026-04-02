@@ -3,13 +3,13 @@ fastapi==0.110.0
 uvicorn[standard]==0.29.0
 python-dotenv==1.0.1
 
-# LangGraph / LangChain
+# LangGraph / LangChain (versiones compatibles entre sí)
 langgraph==0.0.35
-langchain==0.3.28
-langchain-community==0.3.31
-langchain-openai==0.1.0
-langchain-google-genai==2.0.0
-langchain-core==0.1.33
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-openai==0.1.6
+langchain-google-genai==1.0.3
+langchain-core==0.1.52
 
 # Data models
 pydantic==2.6.4
