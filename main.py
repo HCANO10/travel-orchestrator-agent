@@ -52,6 +52,10 @@ async def root():
         "health": "/api/v1/health"
     }
 
+@app.get("/api/v1/health")
+async def health():
+    return {"status": "ok", "version": "5.0.0"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

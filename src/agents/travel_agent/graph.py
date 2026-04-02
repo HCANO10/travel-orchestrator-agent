@@ -1,5 +1,5 @@
 from typing import Literal
-from langgraph.graph import StateGraph, END, START
+from langgraph.graph import StateGraph, END
 
 # Modelos y Estado
 from backend.models.mission_state import MissionState
@@ -39,8 +39,8 @@ workflow.add_node("itinerary_manager", itinerary_node)
 workflow.add_node("orchestrator", orchestrator_node)
 
 # Configurar Bordes y Flujo
-# START → ai_prompter (decide si necesita aclaraciones antes de planificar)
-workflow.add_edge(START, "ai_prompter")
+# Nodo de entrada: ai_prompter (decide si necesita aclaraciones antes de planificar)
+workflow.set_entry_point("ai_prompter")
 
 workflow.add_conditional_edges(
     "ai_prompter",
