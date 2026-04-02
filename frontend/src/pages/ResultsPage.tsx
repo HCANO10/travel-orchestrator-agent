@@ -10,6 +10,7 @@ import {
 import { useAgentStream } from "../hooks/useAgentStream"
 import { AgentTracker } from "../components/AgentTracker"
 import { VividCard } from "../components/VividCard"
+import { TripMap } from "../components/TripMap"
 
 const FlightCard = ({ flight, index }: { flight: any, index: number }) => (
   <VividCard delay={index * 0.1} className="p-0 overflow-hidden group">
@@ -217,6 +218,19 @@ export const ResultsPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Trip Map */}
+            {mission?.travel_request?.origin && mission?.travel_request?.destination && (
+              <div className="glass-card bg-white p-4 rounded-3xl ring-1 ring-slate-100">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2 px-1">
+                  <MapPin className="h-3.5 w-3.5" /> Ruta del Viaje
+                </h4>
+                <TripMap
+                  origin={mission.travel_request.origin}
+                  destination={mission.travel_request.destination}
+                />
+              </div>
+            )}
 
             {/* Agent Thinking Progress */}
             <div className="glass-card bg-white p-6 rounded-3xl ring-1 ring-slate-100">

@@ -7,6 +7,7 @@ import {
   ChevronRight, ArrowLeft, Loader2, Sparkles, Plane, Download, Share2
 } from "lucide-react"
 import { VividCard } from "../components/VividCard"
+import { TripMap } from "../components/TripMap"
 
 const handlePrintPDF = (destination: string) => {
   const originalTitle = document.title
@@ -48,7 +49,7 @@ export const ItineraryPage: React.FC = () => {
           </Link>
           
           <div className="space-y-4">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1]"
@@ -60,6 +61,15 @@ export const ItineraryPage: React.FC = () => {
               Un plan maestro detallado día a día, optimizado algorítmicamente para {mission.travel_request.num_passengers} personas con un estilo {mission.travel_request.travel_style}.
             </p>
           </div>
+
+          {mission.travel_request.origin && mission.travel_request.destination && (
+            <div className="rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50">
+              <TripMap
+                origin={mission.travel_request.origin}
+                destination={mission.travel_request.destination}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-16 relative before:absolute before:left-[23px] before:top-4 before:bottom-4 before:w-[2px] before:bg-slate-200/50">
