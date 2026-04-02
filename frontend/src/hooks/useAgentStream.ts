@@ -22,8 +22,9 @@ export const useAgentStream = (missionId: string | null) => {
 
     setStatus('connecting');
     
-    // El EventSource se conecta al endpoint de streaming del backend
-    const eventSource = new EventSource(`/api/v1/travel/stream/${missionId}`);
+    // Usar la misma base URL que el resto de la API para apuntar al backend correcto
+    const apiBase = import.meta.env.VITE_API_URL || "/api/v1/travel"
+    const eventSource = new EventSource(`${apiBase}/stream/${missionId}`);
 
     eventSource.onmessage = (event) => {
       try {

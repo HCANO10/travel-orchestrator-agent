@@ -308,7 +308,7 @@ export const ResultsPage: React.FC = () => {
             
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <AnimatePresence>
-                {mission?.flights.length ? (
+                {mission?.flights?.length ? (
                   mission.flights.map((f, i) => (
                     <FlightCard key={f.id} flight={f} index={i} />
                   ))
@@ -340,7 +340,7 @@ export const ResultsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               <AnimatePresence>
-                {mission?.accommodations_comfort.length ? (
+                {mission?.accommodations_comfort?.length ? (
                   mission.accommodations_comfort.map((h, i) => (
                     <HotelCard key={h.id} hotel={h} index={i} />
                   ))
